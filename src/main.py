@@ -3,13 +3,80 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QApplication
-from main_window import MainWindow
+from PySide6.QtWidgets import QMainWindow, QApplication, QLineEdit, QMessageBox, QListWidget, QListWidgetItem, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout
+from PySide6.QtGui import QPalette
+from PySide6.QtCore import QTimer, Qt
 import sys
+from pathlib import Path
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.app = QApplication.instance()
+        resolution = self.app.primaryScreen().availableSize()
+        self.resize(resolution.width()/1.5, resolution.height()/1.5)
+        self.setWindowTitle("Alias Manager")
+        self.file_path = None
+        self.file_name = None
+        self.format_filter = None
+        self.last_directory = None
+        #con_path = str(Path(__file__).resolve().parent / "images" / "icon.png")
+        #self.setWindowIcon(QIcon(icon_path))
+        self.showMaximized()
+        home = Path.home()
+        self.bashrc = home / ".bashrc"
+
+    def read_bashrc(self):
+        if not self.bashrc.exists():
+            QMessageBox.critical(self, "Error", "~/.bashrc not found")
+            return False
+
+        list = QListWidget()
+        with open(self.bashrc, "r") as file:
+            for index, line in enumerate(file):
+                if line.startswith("alias"):
+                    widget = QWidget()
+                    layout = QHBoxLayout(widget)
+                    
+                    line_edit = QLineEdit(line[5:].strip("\n"))
+                    line_edit.setReadOnly(True)
+
+                    layout.addWidget(line_edit)
+                    layout.addStretch()
+                    edit = QPushButton("Edit")
+                    edit.clicked.connect(lambda checked=False, le=line_edit, l=layout, i=index: self.edit_mode(le, l, i))
+                    layout.addWidget(edit)
+                    item = QListWidgetItem(list)
+                    item.setSizeHint(widget.sizeHint() * 0.75)
+                    list.setItemWidget(item, widget)
+        self.setCentralWidget(list)
+        return True
+
+    def edit_mode(self, line_edit, layout, index):
+        if not line_edit.isReadOnly():
+            return
+        line_edit.setReadOnly(False)
+        line_edit.setFocus()
+        accept = QPushButton("Accept")
+        layout.addWidget(accept)
+        accept.clicked.connect(lambda checked=False, a=accept, le=line_edit, i=index: self.accept(a, le, i))
+
+    def accept(self, button, line_edit, index):
+        button.deleteLater()
+        line_edit.setReadOnly(True)
+        with open(self.bashrc, "r") as file:
+            lines = file.readlines()
+        lines[index] = lines[index][:5] + line_edit.text() + "\n"
+        with open(self.bashrc, "w") as file:
+            file.writelines(lines)
+        
 
 def main():
     app = QApplication(sys.argv)
-    _window = MainWindow()
+    window = MainWindow()
+    if not window.read_bashrc():
+        sys.exit(0)
     app.exec()
 
 if __name__ == "__main__":
