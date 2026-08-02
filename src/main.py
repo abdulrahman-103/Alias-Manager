@@ -34,8 +34,10 @@ class MainWindow(QMainWindow):
 
         list = QListWidget()
         with open(self.bashrc, "r") as file:
+            row = -1
             for index, line in enumerate(file):
                 if line.startswith("alias"):
+                    row += 1
                     widget = QWidget()
                     layout = QHBoxLayout(widget)
                     
@@ -45,11 +47,14 @@ class MainWindow(QMainWindow):
                     layout.addWidget(line_edit)
                     layout.addStretch()
                     edit = QPushButton("Edit")
-                    edit.clicked.connect(lambda checked=False, le=line_edit, l=layout, i=index: self.edit_mode(le, l, i))
+                    delete = QPushButton("Delete")
                     layout.addWidget(edit)
-                    item = QListWidgetItem(list)
-                    item.setSizeHint(widget.sizeHint() * 0.75)
-                    list.setItemWidget(item, widget)
+                    layout.addWidget(delete)
+                    item_widget = QListWidgetItem(list)
+                    item_widget.setSizeHint(widget.sizeHint() * 0.75)
+                    list.setItemWidget(item_widget, widget)
+                    edit.clicked.connect(lambda checked=False, le=line_edit, l=layout, i=index: self.edit_mode(le, l, i))
+                    delete.clicked.connect(lambda checked=False, l=list, r=row, i=index: self.delete(l, r, i))
         self.setCentralWidget(list)
         return True
 
@@ -67,10 +72,18 @@ class MainWindow(QMainWindow):
         line_edit.setReadOnly(True)
         with open(self.bashrc, "r") as file:
             lines = file.readlines()
-        lines[index] = lines[index][:5] + line_edit.text() + "\n"
+        lines[index] = "alias " + line_edit.text() + "\n"
         with open(self.bashrc, "w") as file:
             file.writelines(lines)
-        
+    
+    def delete(self, list, row, index):
+        list.takeItem(row)
+        with open(self.bashrc, "r") as file:
+            lines = file.readlines()
+        lines[index]  = ""
+        with open(self.bashrc, "w") as file:
+            file.writelines(lines)
+        self.read_bashrc()
 
 def main():
     app = QApplication(sys.argv)
