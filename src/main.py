@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
                     widget = QWidget()
                     layout = QHBoxLayout(widget)
                     
-                    line_edit = QLineEdit(line[5:].strip("\n"))
+                    line_edit = QLineEdit(line[6:].strip("\n"))
                     line_edit.setReadOnly(True)
 
                     layout.addWidget(line_edit)
