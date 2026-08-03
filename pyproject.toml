@@ -23,7 +23,7 @@ Homepage = "https://github.com/abdulrahman-103/Alias-Manager"
 Issues = "https://github.com/abdulrahman-103/Alias-Manager/issues"
 
 [project.gui-scripts]
-kitab = "main:main"
+alias-manager = "main:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
