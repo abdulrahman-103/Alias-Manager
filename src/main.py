@@ -55,7 +55,13 @@ class MainWindow(QMainWindow):
                     list.setItemWidget(item_widget, widget)
                     edit.clicked.connect(lambda checked=False, le=line_edit, l=layout, i=index: self.edit_mode(le, l, i))
                     delete.clicked.connect(lambda checked=False, l=list, r=row, i=index: self.delete(l, r, i))
-        self.setCentralWidget(list)
+        new = QPushButton("New")
+        central_widget = QWidget()
+        central_widget_layout = QVBoxLayout(central_widget)
+        central_widget_layout.addWidget(new)
+        central_widget_layout.addWidget(list)
+        new.clicked.connect(lambda checked=False, l=list, r=row, i=index: self.new(l))
+        self.setCentralWidget(central_widget)
         return True
 
     def edit_mode(self, line_edit, layout, index):
@@ -84,6 +90,18 @@ class MainWindow(QMainWindow):
         with open(self.bashrc, "w") as file:
             file.writelines(lines)
         self.read_bashrc()
+
+    def new(self, list):
+        with open(self.bashrc, "a+") as f:
+            file = f.read()
+            if not file.endswith("\n"):
+                f.write("\n")
+            f.write("alias ")
+
+        self.read_bashrc()
+
+
+
 
 def main():
     app = QApplication(sys.argv)
